@@ -1,7 +1,21 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useScroll, Scroll, Float } from '@react-three/drei';
+import { useScroll, Float, useGLTF, Text } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Sub-component to load the local 3D Duck model gracefully
+export function WorldModel() {
+  // Using the classic Khronos glTF Sample Duck to ensure safe loading
+  const { scene } = useGLTF('./duck.glb'); // Load locally from public folder
+  
+  // Adjusted scale and position for the Duck so it flies down the path perfectly
+  return (
+     <primitive object={scene} scale={2.5} position={[0, -1, 0]} rotation={[0, Math.PI / 2, 0]} />
+  );
+}
+
+// Preload the local model
+useGLTF.preload('./duck.glb');
 
 export const ScrollScene = ({ theme }) => {
   const isDark = theme === 'dark';
@@ -9,37 +23,39 @@ export const ScrollScene = ({ theme }) => {
   const playerRef = useRef();
   const cameraTarget = useMemo(() => new THREE.Vector3(), []);
 
-  // Create geometric "monoliths"
+  const textGroupRef = useRef();
+
   const monoliths = useMemo(() => {
     const items = [];
     for (let i = 0; i < 60; i++) {
         const x = (Math.random() - 0.5) * 50;
         const y = (Math.random() - 0.5) * 30;
-        const z = -i * 6 - 10;
+        const z = -i * 6 - 15; 
         items.push({ position: [x, y, z], scale: 1 + Math.random() * 4 });
     }
     return items;
   }, []);
 
   useFrame((state) => {
-    const offset = scroll.offset; // 0 to 1
+    const offset = scroll.offset; 
     
-    // Path configuration
+    // Path configuration matches Z distribution
     const targetZ = -offset * 350;
     const targetX = Math.sin(offset * Math.PI * 4) * 10; 
     const targetY = Math.cos(offset * Math.PI * 2) * 5;
 
-    // Move the vehicle entity
     if (playerRef.current) {
         playerRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
         
-        // Aviation Banking and pitching effect since it's a sleek aircraft now
-        const targetRotationZ = -Math.sin(offset * Math.PI * 4) * 0.8; 
+        // Banking effect
+        const targetRotationZ = -Math.sin(offset * Math.PI * 4) * 0.15; 
+        const targetRotationY = -Math.sin(offset * Math.PI * 4 + 0.5) * 0.2; 
+        
         playerRef.current.rotation.z = THREE.MathUtils.lerp(playerRef.current.rotation.z, targetRotationZ, 0.1);
-        playerRef.current.rotation.x = THREE.MathUtils.lerp(playerRef.current.rotation.x, targetY * -0.05, 0.1);
+        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, targetRotationY, 0.1);
+        playerRef.current.rotation.x = THREE.MathUtils.lerp(playerRef.current.rotation.x, targetY * -0.02, 0.1);
     }
 
-    // Camera seamlessly tracks the vehicle
     const camTargetPosition = new THREE.Vector3(
         playerRef.current.position.x * 0.5, 
         playerRef.current.position.y + 3, 
@@ -47,27 +63,58 @@ export const ScrollScene = ({ theme }) => {
     );
     state.camera.position.lerp(camTargetPosition, 0.05);
 
-    cameraTarget.set(playerRef.current.position.x, playerRef.current.position.y, playerRef.current.position.z - 20);
+    cameraTarget.set(playerRef.current.position.x * 0.8, playerRef.current.position.y, playerRef.current.position.z - 20);
     state.camera.lookAt(cameraTarget);
   });
 
   return (
     <>
       <group ref={playerRef}>
-        {/* Sleek Minimalist Aircraft / Crystal Glider */}
-        <mesh castShadow rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[1.5, 4, 4]} />
-          <meshStandardMaterial 
-             color={isDark ? "#ffffff" : "#2563eb"} 
-             roughness={0.2} 
-             metalness={0.8} 
-          />
-        </mesh>
-        {/* Glowing Engine Core */}
-        <mesh position={[0, 0.5, 2]} scale={0.6}>
-          <octahedronGeometry />
-          <meshBasicMaterial color={isDark ? "#3b82f6" : "#fb923c"} />
-        </mesh>
+         <WorldModel />
+      </group>
+
+      {/* Floating Cinematic 3D Typography mapped dynamically along the Z-axis track */}
+      {/* Fallback fonts are natively supplied by react-three/drei, ensuring network zero-failures */}
+      <group ref={textGroupRef}>
+         <Text 
+            position={[0, 5, -20]} 
+            fontSize={8} 
+            color={isDark ? "#ffffff" : "#1e40af"} 
+            anchorX="center" anchorY="middle"
+         >
+            ONCHAIN
+         </Text>
+         
+         <Text 
+            position={[-8, 6, -100]} 
+            fontSize={5} 
+            color={isDark ? "#93c5fd" : "#3b82f6"} 
+         >
+            Navigate explicitly via
+         </Text>
+         <Text 
+            position={[5, 2, -105]} 
+            fontSize={6} 
+            color={isDark ? "#e879f9" : "#a855f7"} 
+         >
+            Simulation.
+         </Text>
+
+         <Text 
+            position={[0, 0, -220]} 
+            fontSize={12} 
+            color={isDark ? "#2563eb" : "#1d4ed8"} 
+         >
+            ACCELERATE
+         </Text>
+         
+         <Text 
+            position={[0, 4, -330]} 
+            fontSize={6} 
+            color={isDark ? "#ffffff" : "#111827"} 
+         >
+            The Journey Ends Here.
+         </Text>
       </group>
 
       {/* Render the floating monoliths */}
@@ -85,21 +132,11 @@ export const ScrollScene = ({ theme }) => {
                   roughness={isDark ? 0.1 : 0.4} 
                   metalness={isDark ? 0.8 : 0.2}
                   transparent
-                  opacity={isDark ? 1 : 0.9}
+                  opacity={isDark ? 0.9 : 0.8}
                 />
             </mesh>
         </Float>
       ))}
-
-      {/* HTML Overlay Syncing with Scroll */}
-      <Scroll html style={{ width: '100vw' }}>
-         <div className="html-content-layer">
-            <h1 className="manifesto-title" style={{ top: '10vh' }}>O N C H A I N</h1>
-            <h2 className="manifesto-text" style={{ top: '120vh' }}>Navigate the data streams.</h2>
-            <h2 className="manifesto-text" style={{ top: '220vh' }}>Explore the monoliths.</h2>
-            <h2 className="manifesto-text" style={{ top: '320vh' }}>Welcome to the Simulation.</h2>
-         </div>
-      </Scroll>
     </>
   );
 };
