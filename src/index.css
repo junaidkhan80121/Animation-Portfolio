@@ -3,26 +3,72 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #050810;
-  color: #fff;
-  font-family: 'Outfit', sans-serif;
   overflow: hidden; /* Drei ScrollControls handles overflow */
   -webkit-font-smoothing: antialiased;
+  font-family: 'Outfit', sans-serif;
 }
 
 .app-wrapper {
   width: 100vw;
   height: 100vh;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Light & Dark Modes */
+.app-wrapper.dark {
+  background-color: #050810;
+  color: #fff;
+}
+.app-wrapper.light {
+  background-color: #f8fafc;
+  color: #020617;
+}
+
+/* Theme Toggle styles */
+.theme-toggle {
+  position: fixed;
+  top: 2rem;
+  left: 2rem;
+  z-index: 200;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.theme-toggle:hover {
+  background: currentColor;
+}
+.app-wrapper.dark .theme-toggle:hover {
+  color: #050810;
+}
+.app-wrapper.light .theme-toggle:hover {
+  color: #f8fafc;
+}
+
+/* Base HUD styling */
 .fixed-hud {
   position: fixed;
   z-index: 100;
   font-size: 0.7rem;
   letter-spacing: 0.3rem;
   text-transform: uppercase;
+  transition: color 0.5s ease;
+}
+
+.app-wrapper.dark .fixed-hud {
   color: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
+}
+.app-wrapper.light .fixed-hud {
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .bottom-left {
@@ -34,6 +80,7 @@ body {
   top: 2rem;
   right: 2rem;
   text-align: right;
+  margin-top: 4px; /* Optic balance with button */
 }
 
 .html-content-layer {
@@ -52,18 +99,31 @@ body {
   font-size: 6vw;
   font-weight: 800;
   letter-spacing: 1.5rem;
-  margin-left: 0.75rem; /* Optical align for letter spacing */
-  background: linear-gradient(135deg, #fff 0%, #3b82f6 100%);
+  margin-left: 0.75rem; /* Optical align */
+  background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  transition: filter 0.5s ease;
+}
+.app-wrapper.dark .manifesto-title {
   filter: drop-shadow(0 0 20px rgba(59,130,246,0.3));
+}
+.app-wrapper.light .manifesto-title {
+  filter: drop-shadow(0 0 10px rgba(59,130,246,0.1));
 }
 
 .manifesto-text {
   font-size: 2.5vw;
   font-weight: 300;
   letter-spacing: 0.1rem;
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+.app-wrapper.dark .manifesto-text {
   color: rgba(255, 255, 255, 0.8);
   text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
+.app-wrapper.light .manifesto-text {
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: none;
 }

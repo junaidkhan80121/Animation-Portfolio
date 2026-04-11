@@ -3,16 +3,16 @@ import { useFrame } from '@react-three/fiber';
 import { useScroll, Scroll, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
-export const ScrollScene = () => {
+export const ScrollScene = ({ theme }) => {
+  const isDark = theme === 'dark';
   const scroll = useScroll();
-  const carRef = useRef();
+  const playerRef = useRef();
   const cameraTarget = useMemo(() => new THREE.Vector3(), []);
 
-  // Create geometric "monoliths" representing the Igloo experience assets
+  // Create geometric "monoliths"
   const monoliths = useMemo(() => {
     const items = [];
     for (let i = 0; i < 60; i++) {
-        // Disperse them down the Z-axis track
         const x = (Math.random() - 0.5) * 50;
         const y = (Math.random() - 0.5) * 30;
         const z = -i * 6 - 10;
@@ -30,51 +30,43 @@ export const ScrollScene = () => {
     const targetY = Math.cos(offset * Math.PI * 2) * 5;
 
     // Move the vehicle entity
-    if (carRef.current) {
-        carRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
+    if (playerRef.current) {
+        playerRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
         
-        // Banking and pitching effect for dynamic feeling
-        const targetRotationZ = -Math.sin(offset * Math.PI * 4) * 0.4;
-        carRef.current.rotation.z = THREE.MathUtils.lerp(carRef.current.rotation.z, targetRotationZ, 0.1);
-        carRef.current.rotation.x = THREE.MathUtils.lerp(carRef.current.rotation.x, 0.05, 0.1);
+        // Aviation Banking and pitching effect since it's a sleek aircraft now
+        const targetRotationZ = -Math.sin(offset * Math.PI * 4) * 0.8; 
+        playerRef.current.rotation.z = THREE.MathUtils.lerp(playerRef.current.rotation.z, targetRotationZ, 0.1);
+        playerRef.current.rotation.x = THREE.MathUtils.lerp(playerRef.current.rotation.x, targetY * -0.05, 0.1);
     }
 
-    // Camera seamlessly tracks the vehicle, slightly offset to see it
+    // Camera seamlessly tracks the vehicle
     const camTargetPosition = new THREE.Vector3(
-        carRef.current.position.x * 0.5, 
-        carRef.current.position.y + 3, 
-        carRef.current.position.z + 10
+        playerRef.current.position.x * 0.5, 
+        playerRef.current.position.y + 3, 
+        playerRef.current.position.z + 12
     );
     state.camera.position.lerp(camTargetPosition, 0.05);
 
-    // Look slightly ahead of the car for cinematic feel
-    cameraTarget.set(carRef.current.position.x, carRef.current.position.y, carRef.current.position.z - 20);
+    cameraTarget.set(playerRef.current.position.x, playerRef.current.position.y, playerRef.current.position.z - 20);
     state.camera.lookAt(cameraTarget);
   });
 
   return (
     <>
-      <group ref={carRef}>
-        {/* Simple futuristic hovercar model made of primitives */}
-        <mesh castShadow>
-          <boxGeometry args={[1.5, 0.3, 3]} />
-          <meshStandardMaterial color="#2563eb" roughness={0.2} metalness={0.8} />
+      <group ref={playerRef}>
+        {/* Sleek Minimalist Aircraft / Crystal Glider */}
+        <mesh castShadow rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[1.5, 4, 4]} />
+          <meshStandardMaterial 
+             color={isDark ? "#ffffff" : "#2563eb"} 
+             roughness={0.2} 
+             metalness={0.8} 
+          />
         </mesh>
-        {/* Engine Glow */}
-        <mesh position={[0, -0.1, 1.6]}>
-          <boxGeometry args={[1.2, 0.1, 0.1]} />
-          <meshBasicMaterial color="#60a5fa" />
-        </mesh>
-        {/* Cockpit */}
-        <mesh position={[0, 0.3, -0.2]}>
-          <boxGeometry args={[0.8, 0.3, 1.5]} />
-          <meshStandardMaterial color="#1e3a8a" roughness={0.1} metalness={0.9} transparent opacity={0.8} />
-        </mesh>
-        {/* Headlight beams */}
-        <mesh position={[0, 0, -5]}>
-           <cylinderGeometry args={[2, 0.1, 10, 32]} />
-           <meshBasicMaterial color="#ffffff" transparent opacity={0.05} blending={THREE.AdditiveBlending} />
-           <group rotation={[Math.PI / 2, 0, 0]} />
+        {/* Glowing Engine Core */}
+        <mesh position={[0, 0.5, 2]} scale={0.6}>
+          <octahedronGeometry />
+          <meshBasicMaterial color={isDark ? "#3b82f6" : "#fb923c"} />
         </mesh>
       </group>
 
@@ -84,10 +76,16 @@ export const ScrollScene = () => {
             <mesh position={props.position} scale={[props.scale, props.scale, props.scale]}>
                 <octahedronGeometry args={[1, 0]} />
                 <meshStandardMaterial 
-                  color={i % 3 === 0 ? "#111827" : (i % 2 === 0 ? "#1e40af" : "#3b82f6")} 
+                  color={
+                    isDark 
+                    ? (i % 3 === 0 ? "#111827" : (i % 2 === 0 ? "#1e40af" : "#3b82f6"))
+                    : (i % 3 === 0 ? "#94a3b8" : (i % 2 === 0 ? "#cbd5e1" : "#e2e8f0"))
+                  } 
                   wireframe={i % 5 === 0} 
-                  roughness={0.1} 
-                  metalness={0.8}
+                  roughness={isDark ? 0.1 : 0.4} 
+                  metalness={isDark ? 0.8 : 0.2}
+                  transparent
+                  opacity={isDark ? 1 : 0.9}
                 />
             </mesh>
         </Float>
