@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #050810;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden; /* Drei ScrollControls handles overflow */
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-wrapper {
+  width: 100vw;
+  height: 100vh;
+}
+
+.fixed-hud {
+  position: fixed;
+  z-index: 100;
+  font-size: 0.7rem;
+  letter-spacing: 0.3rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.bottom-left {
+  bottom: 2rem;
+  left: 2rem;
+}
+
+.top-right {
+  top: 2rem;
+  right: 2rem;
+  text-align: right;
+}
+
+.html-content-layer {
+  position: relative;
+  width: 100%;
+}
+
+.manifesto-title, .manifesto-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}
+
+.manifesto-title {
+  font-size: 6vw;
+  font-weight: 800;
+  letter-spacing: 1.5rem;
+  margin-left: 0.75rem; /* Optical align for letter spacing */
+  background: linear-gradient(135deg, #fff 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(59,130,246,0.3));
+}
+
+.manifesto-text {
+  font-size: 2.5vw;
+  font-weight: 300;
+  letter-spacing: 0.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
