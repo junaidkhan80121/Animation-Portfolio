@@ -1,36 +1,50 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useScroll, Float, useGLTF, Text } from '@react-three/drei';
+import { useScroll, Float, Text, RoundedBox, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Sub-component to load the local 3D Duck model gracefully
-export function WorldModel() {
-  // Using the classic Khronos glTF Sample Duck to ensure safe loading
-  const { scene } = useGLTF('./duck.glb'); // Load locally from public folder
+export function LaptopModel({ isDark }) {
+  const metalColor = isDark ? "#4b5563" : "#cbd5e1"; 
   
-  // Adjusted scale and position for the Duck so it flies down the path perfectly
   return (
-     <primitive object={scene} scale={2.5} position={[0, -1, 0]} rotation={[0, Math.PI / 2, 0]} />
+    <group position={[0, -0.5, 0]}>
+      <RoundedBox args={[3.2, 0.1, 2.2]} radius={0.04} smoothness={4} position={[0, 0, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={metalColor} metalness={0.9} roughness={0.3} />
+      </RoundedBox>
+      <RoundedBox args={[2.8, 0.05, 1.1]} radius={0.01} smoothness={2} position={[0, 0.04, -0.3]}>
+        <meshStandardMaterial color={isDark ? "#111827" : "#334155"} roughness={0.8} metalness={0.2} />
+      </RoundedBox>
+      <RoundedBox args={[1.2, 0.02, 0.7]} radius={0.02} smoothness={2} position={[0, 0.06, 0.65]}>
+        <meshStandardMaterial color={isDark ? "#374151" : "#94a3b8"} metalness={0.6} roughness={0.4} />
+      </RoundedBox>
+      <group position={[0, 0.05, -1.05]} rotation={[-0.15, 0, 0]}>
+        <RoundedBox args={[3.2, 2.1, 0.08]} radius={0.04} smoothness={4} position={[0, 1.05, -0.04]}>
+          <meshStandardMaterial color={metalColor} metalness={0.9} roughness={0.3} />
+        </RoundedBox>
+        <RoundedBox args={[3.1, 2, 0.01]} radius={0.02} smoothness={4} position={[0, 1.05, 0.01]}>
+          <meshStandardMaterial color="#000000" metalness={1} roughness={0.1} />
+        </RoundedBox>
+        <mesh position={[0, 1.05, 0.016]}>
+          <planeGeometry args={[2.9, 1.8]} />
+          <meshBasicMaterial color={isDark ? "#1d4ed8" : "#38bdf8"} />
+        </mesh>
+      </group>
+    </group>
   );
 }
-
-// Preload the local model
-useGLTF.preload('./duck.glb');
 
 export const ScrollScene = ({ theme }) => {
   const isDark = theme === 'dark';
   const scroll = useScroll();
-  const playerRef = useRef();
-  const cameraTarget = useMemo(() => new THREE.Vector3(), []);
 
-  const textGroupRef = useRef();
-
-  const monoliths = useMemo(() => {
+  // Igloo style "Ice Cubes" / Monoliths 
+  const cubes = useMemo(() => {
     const items = [];
-    for (let i = 0; i < 60; i++) {
-        const x = (Math.random() - 0.5) * 50;
-        const y = (Math.random() - 0.5) * 30;
-        const z = -i * 6 - 15; 
+    for (let i = 0; i < 70; i++) {
+        // Form a massive endless cavern
+        const x = (Math.random() - 0.5) * 60;
+        const y = (Math.random() - 0.5) * 60;
+        const z = -Math.random() * 600 - 5; 
         items.push({ position: [x, y, z], scale: 1 + Math.random() * 4 });
     }
     return items;
@@ -39,101 +53,82 @@ export const ScrollScene = ({ theme }) => {
   useFrame((state) => {
     const offset = scroll.offset; 
     
-    // Path configuration matches Z distribution
-    const targetZ = -offset * 350;
-    const targetX = Math.sin(offset * Math.PI * 4) * 10; 
-    const targetY = Math.cos(offset * Math.PI * 2) * 5;
-
-    if (playerRef.current) {
-        playerRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
-        
-        // Banking effect
-        const targetRotationZ = -Math.sin(offset * Math.PI * 4) * 0.15; 
-        const targetRotationY = -Math.sin(offset * Math.PI * 4 + 0.5) * 0.2; 
-        
-        playerRef.current.rotation.z = THREE.MathUtils.lerp(playerRef.current.rotation.z, targetRotationZ, 0.1);
-        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, targetRotationY, 0.1);
-        playerRef.current.rotation.x = THREE.MathUtils.lerp(playerRef.current.rotation.x, targetY * -0.02, 0.1);
-    }
-
-    const camTargetPosition = new THREE.Vector3(
-        playerRef.current.position.x * 0.5, 
-        playerRef.current.position.y + 3, 
-        playerRef.current.position.z + 12
+    // IGLOO Cinematic Dive: CAMERA FLIES FORWARD along Z axis 
+    const cameraZ = -offset * 600; 
+    
+    state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, cameraZ + 15, 0.05); // Smooth pursuit
+    
+    // Cinematic camera bob and sway (organic human/drifting feeling)
+    state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, Math.sin(offset * Math.PI * 8) * 4, 0.05);
+    state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, Math.cos(offset * Math.PI * 6) * 3 + 2, 0.05);
+    
+    state.camera.lookAt(
+      state.camera.position.x + Math.sin(offset * Math.PI * 4) * 0.5, 
+      state.camera.position.y, 
+      cameraZ - 50
     );
-    state.camera.position.lerp(camTargetPosition, 0.05);
-
-    cameraTarget.set(playerRef.current.position.x * 0.8, playerRef.current.position.y, playerRef.current.position.z - 20);
-    state.camera.lookAt(cameraTarget);
   });
 
   return (
     <>
-      <group ref={playerRef}>
-         <WorldModel />
-      </group>
+      <Sparkles count={1500} scale={200} size={5} speed={0.4} opacity={isDark ? 0.3 : 0.6} color={isDark ? "#ffffff" : "#1e40af"} />
 
-      {/* Floating Cinematic 3D Typography mapped dynamically along the Z-axis track */}
-      {/* Fallback fonts are natively supplied by react-three/drei, ensuring network zero-failures */}
-      <group ref={textGroupRef}>
-         <Text 
-            position={[0, 5, -20]} 
-            fontSize={8} 
-            color={isDark ? "#ffffff" : "#1e40af"} 
-            anchorX="center" anchorY="middle"
-         >
-            ONCHAIN
-         </Text>
-         
-         <Text 
-            position={[-8, 6, -100]} 
-            fontSize={5} 
-            color={isDark ? "#93c5fd" : "#3b82f6"} 
-         >
-            Navigate explicitly via
-         </Text>
-         <Text 
-            position={[5, 2, -105]} 
-            fontSize={6} 
-            color={isDark ? "#e879f9" : "#a855f7"} 
-         >
-            Simulation.
+      {/* The Laptop rests statically in space as a hero opening piece as we plunge past it */}
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
+        <group position={[0, -2, -5]} rotation={[0.2, -0.4, 0]}>
+           <LaptopModel isDark={isDark} />
+        </group>
+      </Float>
+
+      {/* Extreme Cinematic Typography mapping exactly with the Camera Dive */}
+      <group>
+         <Text position={[0, 4, -25]} fontSize={10} color={isDark ? "#ffffff" : "#020617"} anchorX="center" anchorY="middle" letterSpacing={0.1}>
+            FULL STACK
          </Text>
 
-         <Text 
-            position={[0, 0, -220]} 
-            fontSize={12} 
-            color={isDark ? "#2563eb" : "#1d4ed8"} 
-         >
-            ACCELERATE
+         <Text position={[-6, 6, -120]} fontSize={7} color={isDark ? "#3b82f6" : "#2563eb"} anchorX="left">
+            DOM MASTERY
+         </Text>
+         <Text position={[-6, 0, -120]} fontSize={3} color={isDark ? "#94a3b8" : "#475569"} maxWidth={20} anchorX="left">
+            React / WebGL / Node / System Architecture. Highly optimized rendering infrastructures engineered for absolute absolute performance.
          </Text>
          
-         <Text 
-            position={[0, 4, -330]} 
-            fontSize={6} 
-            color={isDark ? "#ffffff" : "#111827"} 
-         >
-            The Journey Ends Here.
+         <Text position={[6, -2, -240]} fontSize={7} color={isDark ? "#e879f9" : "#c026d3"} anchorX="right">
+            EXPERIENCE
+         </Text>
+         <Text position={[6, -6, -240]} fontSize={3} color={isDark ? "#94a3b8" : "#475569"} maxWidth={20} anchorX="right" textAlign="right">
+            Vast historical exposure to deploying massive scalable frameworks handling millions of concurrent requests gracefully.
+         </Text>
+
+         <Text position={[0, 5, -360]} fontSize={10} color={isDark ? "#ffffff" : "#020617"} anchorX="center" textAlign="center" letterSpacing={0.2}>
+            PROJECT CORE
+         </Text>
+
+         <Text position={[0, 0, -500]} fontSize={12} color={isDark ? "#3b82f6" : "#1d4ed8"} anchorX="center" letterSpacing={0.2}>
+            INITIALIZE.
          </Text>
       </group>
 
-      {/* Render the floating monoliths */}
-      {monoliths.map((props, i) => (
-        <Float key={i} speed={2} rotationIntensity={0.5} floatIntensity={1}>
+      {/* Igloo-like Glass Cubicles/Monoliths passing through camera bounds */}
+      {cubes.map((props, i) => (
+        <Float key={i} speed={1.5} rotationIntensity={1} floatIntensity={2}>
             <mesh position={props.position} scale={[props.scale, props.scale, props.scale]}>
-                <octahedronGeometry args={[1, 0]} />
-                <meshStandardMaterial 
-                  color={
-                    isDark 
-                    ? (i % 3 === 0 ? "#111827" : (i % 2 === 0 ? "#1e40af" : "#3b82f6"))
-                    : (i % 3 === 0 ? "#94a3b8" : (i % 2 === 0 ? "#cbd5e1" : "#e2e8f0"))
-                  } 
-                  wireframe={i % 5 === 0} 
-                  roughness={isDark ? 0.1 : 0.4} 
-                  metalness={isDark ? 0.8 : 0.2}
+                <boxGeometry args={[1, 1, 1]} />
+                <meshPhysicalMaterial 
+                  color={isDark ? "#050810" : "#ffffff"} 
+                  transmission={0.9} 
+                  opacity={1} 
+                  metalness={isDark ? 0.9 : 0.1} 
+                  roughness={0.1} 
+                  ior={1.5} 
+                  thickness={1} 
                   transparent
-                  opacity={isDark ? 0.9 : 0.8}
                 />
+            </mesh>
+            {/* Glowing Wireframe Rim */}
+            <mesh position={props.position} scale={[props.scale * 1.01, props.scale * 1.01, props.scale * 1.01]}>
+               <boxGeometry args={[1, 1, 1]} />
+               <meshBasicMaterial color={isDark ? "#3b82f6" : "#2563eb"} wireframe transparent opacity={isDark ? 0.3 : 0.15} />
             </mesh>
         </Float>
       ))}

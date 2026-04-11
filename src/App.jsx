@@ -14,21 +14,26 @@ function App() {
     <div className={`app-wrapper ${theme}`}>
       <Experience3D theme={theme} />
       
-      {/* Theme Toggle Button */}
-      <button 
-        className="theme-toggle" 
-        onClick={toggleTheme}
-        aria-label="Toggle Theme"
-      >
-        {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
-      </button>
-
-      {/* Permanent Fixed Overlay HUD Elements */}
-      <div className="fixed-hud bottom-left">
-        STATUS: ONLINE | SCROLL TO EXPLORE
-      </div>
-      <div className="fixed-hud top-right">
-        IGLOO REPLICA v3.0 | {theme.toUpperCase()} MODE
+      {/* Igloo-style HUD UI Interfacing */}
+      <div className="hud-layer">
+         <div className="hud-top-bar">
+            <div className="logo">PORTFOLIO.SYS // WebGL Native</div>
+            
+            <div className="hud-controls">
+               <div className="status blink">SCROLL TO DELVE</div>
+               <button className="theme-toggle" onClick={toggleTheme}>
+                  {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+               </button>
+            </div>
+         </div>
+         
+         <div className="hud-bottom-bar">
+            <div>CAM_TARGET: [0.5, 4.0, Z]</div>
+            <div>VER: 3.1.0-STABLE</div>
+            <div>ENVIRONMENT: {theme.toUpperCase()}</div>
+         </div>
+         
+         <div className="crosshair"></div>
       </div>
     </div>
   );
