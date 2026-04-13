@@ -17,7 +17,7 @@ function App() {
       {/* Igloo-style HUD UI Interfacing */}
       <div className="hud-layer">
          <div className="hud-top-bar">
-            <div className="logo">PORTFOLIO.SYS // WebGL Native</div>
+            <div className="logo">Sub-Zero</div>
             
             <div className="hud-controls">
                <div className="status blink">SCROLL TO DELVE</div>
